@@ -8,4 +8,4 @@ Options:
 - precisely modifiying annotaions,
 - personal Artificial Inteligence Assistant
 - .... 
-<img width="1600" height="900" alt="image" src="https://github.com/user-attachments/assets/85e95fd2-1fb7-48e8-ada5-a8574ff483be" />
+<img width="1202" height="752" alt="image" src="https://github.com/user-attachments/assets/0d75bbd6-2825-4bab-83f3-677b3c96bb00" />
