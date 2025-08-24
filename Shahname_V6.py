@@ -96,6 +96,8 @@ class ProjectViewerApp(tk.Tk):
         Edit_menu.add_separator()  # اضافه کردن خط جداکننده
         Edit_menu.add_command(label="Lock This Image", command=self.Lock_This_Image)
         Edit_menu.add_command(label="unLock This Image", command=self.unLock_This_Image)
+        Edit_menu.add_separator()  # اضافه کردن خط جداکننده
+        Edit_menu.add_command(label="Clear Bounding box for the current image", command=self.Clear_BBox_list)
         Export_menu = tk.Menu(menu_bar, tearoff=0)
         Export_menu.add_command(label="Split images", command=self.Split_images_by_BBoxes)
         Export_menu.add_command(label="Export to YAML format", command=self.Export_to_YAML)
@@ -112,7 +114,10 @@ class ProjectViewerApp(tk.Tk):
         Labels_menu.add_command(label="Change Persian Characters to Label names", command=self.Change_Persian_Characters_to_Label_names)
         AI_menu = tk.Menu(menu_bar, tearoff=0)
         AI_menu.add_command(label="Load deep learning model for assistance", command=self.Load_deep_learning_model)
+        AI_menu.add_separator()  # اضافه کردن خط جداکننده
         AI_menu.add_command(label="Apply deep learning model to the current image", command=self.Apply_deep_learning_model)
+        AI_menu.add_separator()  # اضافه کردن خط جداکننده
+        AI_menu.add_command(label="Apply deep learning model to All images with no BBox", command=self.Apply_deep_learning_model_to_All)
         menu_bar.add_cascade(label="File", menu=file_menu)
         menu_bar.add_cascade(label="Edit", menu=Edit_menu)
         menu_bar.add_cascade(label="Export", menu=Export_menu)
@@ -960,7 +965,7 @@ class ProjectViewerApp(tk.Tk):
         self.zoom_factor = 1 # Zoom factor
         self.crop_cords = [0, 0 , 1, 1] #Crop coordinations used for zoom
         self.label_to_number = {}
-
+        self.canvas.delete("all")
 
     def _setup_widgets(self):
         main_frame = ttk.Frame(self, padding=10, style='TFrame', width=1000, height=800)
@@ -1205,7 +1210,7 @@ class ProjectViewerApp(tk.Tk):
         self.delet_frame.pack(side=tk.BOTTOM,  pady=2)
 
         self.delete_button = ttk.Button(self.delet_frame, text="Delete", padding=0,  command=self.delete_rectangle)
-        self.delete_button.pack(side=tk.BOTTOM, padx=5, pady=(60,0))
+        self.delete_button.pack(side=tk.BOTTOM, padx=5, pady=(100,0))
 
     def start_drag(self, event):
         """شروع درگ با ذخیره موقعیت کلیک راست."""
@@ -2303,21 +2308,36 @@ class ProjectViewerApp(tk.Tk):
             fname = self.project_data["images"][self.img_index]
             for i in range(len(self.project_data["IsLocks"][fname])):
                 self.project_data["IsLocks"][fname][i] = True
-        self.populate_rectangle_list()
-        self.update_edit_panel_and_image_crop()
-        if self.rect_index != None:
-            self.disable_frame()
+            self.populate_rectangle_list()
+            self.update_edit_panel_and_image_crop()
+            if self.rect_index != None:
+                self.disable_frame()
 
     def unLock_This_Image(self):
         if self.img_index != None:
             fname = self.project_data["images"][self.img_index]
             for i in range(len(self.project_data["IsLocks"][fname])):
                 self.project_data["IsLocks"][fname][i] = False
-        self.populate_rectangle_list()
-        self.update_edit_panel_and_image_crop()
-        if self.rect_index != None:
-            self.enable_frame()
 
+            self.populate_rectangle_list()
+            self.update_edit_panel_and_image_crop()
+            if self.rect_index != None:
+                self.enable_frame()
+
+
+    def Clear_BBox_list(self):
+        if self.img_index != None:
+            fname = self.project_data["images"][self.img_index]
+
+            self.project_data["rectangles"][fname] = []
+            self.project_data["IsLocks"][fname] = []
+            self.project_data["Labels"][fname] = []
+
+            self.rect_index = None
+            self.populate_rectangle_list()
+            self.update_edit_panel_and_image_crop()
+
+            self.disable_frame()
 
     def disable_frame(self):
         self.left_top_button.config(state='disabled')
@@ -3041,6 +3061,50 @@ class ProjectViewerApp(tk.Tk):
         else:
             messagebox.showinfo("No AI model", "No AI model is available,\nnot successful.")
             return  # No AI model is available
+
+    def Apply_deep_learning_model_to_All(self):
+        if self.model:
+            for fname in self.project_data["images"]:
+                if self.project_data["rectangles"][fname] == []:
+                    try:
+                        image_path = os.path.join(self.project_data["image_folder"], fname)
+                        results = self.model.predict(image_path)
+                        prediction_coords = results[0].boxes.xywhn.cpu().numpy()
+                        classs = results[0].boxes.cls.cpu().numpy()
+                        names = results[0].names
+                        result_file_name = fname[:-4] + '.txt'
+                        result_file_path = os.path.join(self.project_data["image_folder"], result_file_name)
+                        os.remove(result_file_path) if os.path.exists(result_file_path) else None
+                        results[0].save_txt(result_file_path, False)
+
+                        # مرتب‌سازی بر اساس مختصات x مرکز
+                        sorted_indices = np.argsort(prediction_coords[:, 0])[::-1]
+                        prediction_coords = prediction_coords[sorted_indices]   
+                        classs = classs[sorted_indices].astype(int)   
+                        if len(classs) > 0:
+                            for i in range(len(sorted_indices)):
+                                x1 = prediction_coords[i][0] - prediction_coords[i][2] / 2
+                                x2 = prediction_coords[i][0] + prediction_coords[i][2] / 2
+                                y1 = prediction_coords[i][1] - prediction_coords[i][3] / 2
+                                y2 = prediction_coords[i][1] + prediction_coords[i][3] / 2
+
+                                self.project_data["rectangles"][fname].append((x1,y1,x2,y2))
+                                self.project_data["IsLocks"][fname].append(False)
+                                self.project_data["Labels"][fname].append(names[classs[i]])
+                    except:
+                        continue
+            
+            self.rect_index = 0
+            self.crop_cords = list((0, 0, 1, 1))
+            self.zoom_factor = 1
+            self.refresh_image()  # Your method to display the image number self.img_index
+            self.draw_rectamgles()
+            self.populate_rectangle_list()  # Populate the rectangle list
+            self.update_edit_panel_and_image_crop()
+            self.label_entry.focus_set()                 # Set keyboard focus to the labeling box for better UX                
+            self.label_entry.icursor(tk.END)  # Move cursor to end of text
+        
+            messagebox.showinfo("Info", f" مدل هوش مصنوعی با آدرس \n{self.project_data["path_to_AI"]}\n روی تصاویری که شیئی در آنها مشخص نشده بود اجرا شد و نتیجه به لیست اشیا اضافه شد")
 
 def main():
     app = ProjectViewerApp()
