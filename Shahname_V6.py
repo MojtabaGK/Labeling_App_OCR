@@ -7,6 +7,7 @@ from PIL import Image, ImageTk
 import shutil
 from ultralytics import YOLO
 import numpy as np
+import random
 
 class ProjectViewerApp(tk.Tk):
     def __init__(self):
@@ -106,6 +107,7 @@ class ProjectViewerApp(tk.Tk):
         Labels_menu = tk.Menu(menu_bar, tearoff=0)
         Labels_menu.add_command(label="Import Label Names List", command=self.Import_Label_Names_List)
         Labels_menu.add_command(label="Merge Label Names List", command=self.Merge_Label_Names_List)
+        Labels_menu.add_command(label="Reset Label Names List", command=self.Reset_Label_Names_List)
         Labels_menu.add_separator()  # اضافه کردن خط جداکننده
         Labels_menu.add_command(label="Change Persian Characters to Label names", command=self.Change_Persian_Characters_to_Label_names)
         AI_menu = tk.Menu(menu_bar, tearoff=0)
@@ -845,11 +847,13 @@ class ProjectViewerApp(tk.Tk):
                     shutil.copytree(self.project_data['image_folder'], os.path.join(folder_path, 'images'), copy_function=shutil.copy2)
                 # move AI file
                 if self.project_data['path_to_AI'] != "":
-                    shutil.copy2(self.project_data['path_to_AI'], folder_path)
-              
+                    try:
+                        shutil.copy2(self.project_data['path_to_AI'], folder_path)
+                    except:
+                        True
                 messagebox.showinfo("Success", "Project saved successfully.\n اگر قصد دارید پروژه‌ای را که اخیرا ذخیره کرده اید ویرایش کنید باید آنرا باز کنید. در غیر این صورت فایل قدیم پروژه ویرایش خواهد شد. مگر اینکه مبدا و مقصد یکی بوده باشند.")
             except Exception as e:
-                messagebox.showerror("Error", f"Could not save project file:\n{e}\nimage is: {img}")
+                messagebox.showerror("Error", f"Could not save project comletely:\n{e}\nlas image moved is: {img}")
         else:
             project_txt_path = None
         return project_txt_path
@@ -975,27 +979,29 @@ class ProjectViewerApp(tk.Tk):
         # self.split_button.pack(side=tk.LEFT, padx=5)
 
 
-        self.button3 = ttk.Button(btn_frame, text="Zoom in", command=self.Zoom_in)
-        self.button3.pack(side=tk.LEFT, padx=2)
+        button3 = ttk.Button(btn_frame, text="Zoom in", command=self.Zoom_in)
+        button3.pack(side=tk.LEFT, padx=2)
 
-        self.button4 = ttk.Button(btn_frame, text="Zoom out", command=self.Zoom_out)
-        self.button4.pack(side=tk.LEFT, padx=2)
+        button4 = ttk.Button(btn_frame, text="Zoom out", command=self.Zoom_out)
+        button4.pack(side=tk.LEFT, padx=2)
 
         # Arrow Buttons
-        self.up_button = ttk.Button(btn_frame, text="↑", command=self.move_up, width=3)
-        self.up_button.pack(side=tk.LEFT, padx=1)
-        self.down_button = ttk.Button(btn_frame, text="↓", command=self.move_down, width=3)
-        self.down_button.pack(side=tk.LEFT, padx=1)
-        self.left_button = ttk.Button(btn_frame, text="←", command=self.move_left, width=3)
-        self.left_button.pack(side=tk.LEFT, padx=1)
-        self.right_button = ttk.Button(btn_frame, text="→", command=self.move_right, width=3)
-        self.right_button.pack(side=tk.LEFT, padx=1)
-        self.delete_image = ttk.Button(btn_frame, text="delete image", command=self.delet_image_from_project)
-        self.delete_image.pack(side=tk.RIGHT, padx=2)
-        self.delete_image = ttk.Button(btn_frame, text="Apply AI", command=self.Apply_deep_learning_model)
-        self.delete_image.pack(side=tk.RIGHT, padx=2)
-        self.Backup = ttk.Button(btn_frame, text="Backup", command=self.Auto_save_project)
-        self.Backup.pack(side=tk.RIGHT, padx=2)
+        up_button = ttk.Button(btn_frame, text="↑", command=self.move_up, width=3)
+        up_button.pack(side=tk.LEFT, padx=1)
+        down_button = ttk.Button(btn_frame, text="↓", command=self.move_down, width=3)
+        down_button.pack(side=tk.LEFT, padx=1)
+        left_button = ttk.Button(btn_frame, text="←", command=self.move_left, width=3)
+        left_button.pack(side=tk.LEFT, padx=1)
+        right_button = ttk.Button(btn_frame, text="→", command=self.move_right, width=3)
+        right_button.pack(side=tk.LEFT, padx=1)
+        delete_image = ttk.Button(btn_frame, text="delete image", command=self.delet_image_from_project)
+        delete_image.pack(side=tk.RIGHT, padx=2)
+        delete_image = ttk.Button(btn_frame, text="Apply AI", command=self.Apply_deep_learning_model)
+        delete_image.pack(side=tk.RIGHT, padx=2)
+        Backup = ttk.Button(btn_frame, text="Backup", command=self.Auto_save_project)
+        Backup.pack(side=tk.RIGHT, padx=2)
+        save = ttk.Button(btn_frame, text="Save As", command=self.save_project)
+        save.pack(side=tk.RIGHT, padx=2)
 
         # Canvas for image & rectangles - below buttons
         self.canvas = tk.Canvas(self.left_frame, bg='white', width=650, height=550)
@@ -1989,8 +1995,11 @@ class ProjectViewerApp(tk.Tk):
         x = event.x
         y = event.y
         self.canvas.delete('lines')  # delete previous lines
-        self.canvas.create_line(x - 1, 0, x - 1, canvas_height, tags='lines')  # vertical line
-        self.canvas.create_line(0, y - 1, canvas_width, y - 1, tags='lines')  # horizontal line
+
+        hex_color = f"#50ff50"
+
+        self.canvas.create_line(x - 1, 0, x - 1, canvas_height, tags='lines', fill=hex_color)  # vertical line
+        self.canvas.create_line(0, y - 1, canvas_width, y - 1, tags='lines', fill=hex_color)  # horizontal line
 
     def on_leave_image_canvas(self, event):
         self.canvas.delete('lines')  # delete previous lines
@@ -2163,7 +2172,8 @@ class ProjectViewerApp(tk.Tk):
                     self.coords = self.rectangles[current_point[0]]
                     self.Rec_Label = self.Labels[current_point[0]]  # Copy for editing
                     self.populate_rectangle_list()
-                    self.display_image() # Your method to display the image number self.img_index
+                    if current_point[1] != start_point[1]:
+                        self.display_image() # Your method to display the image number self.img_index
                     self.draw_rectamgles()
                     self.update_edit_panel_and_image_crop()
                     self.update_rectangle_preview()
@@ -2199,7 +2209,8 @@ class ProjectViewerApp(tk.Tk):
                     self.coords = self.rectangles[current_point[0]]
                     self.Rec_Label = self.Labels[current_point[0]]  # Copy for editing
                     self.populate_rectangle_list()
-                    self.display_image() # Your method to display the image number self.img_index
+                    if current_point[1] != start_point[1]:
+                        self.display_image() # Your method to display the image number self.img_index
                     self.draw_rectamgles()
                     self.update_edit_panel_and_image_crop()
                     self.update_rectangle_preview()
@@ -2243,7 +2254,8 @@ class ProjectViewerApp(tk.Tk):
                     self.coords = self.rectangles[current_point[0]]
                     self.Rec_Label = self.Labels[current_point[0]]  # Copy for editing
                     self.populate_rectangle_list()
-                    self.display_image() # Your method to display the image number self.img_index
+                    if current_point[1] != start_point[1]:
+                        self.display_image() # Your method to display the image number self.img_index
                     self.draw_rectamgles()
                     self.update_edit_panel_and_image_crop()
                     self.update_rectangle_preview()
@@ -2893,7 +2905,12 @@ class ProjectViewerApp(tk.Tk):
             return  # User cancelled folder selection
         # for label in self.label_to_number:
         #     print(f"{self.label_to_number[label]:02d}: \"{label:s}\"")
-            
+
+        
+    def Reset_Label_Names_List(self):
+        self.label_to_number = {}
+        messagebox.showinfo("Success", "Label names list is cleared successfully.")
+
     def Change_Persian_Characters_to_Label_names(self):
         for fname in self.project_data["images"]:
             for i, label in enumerate(self.project_data["Labels"][fname]):
@@ -2962,6 +2979,7 @@ class ProjectViewerApp(tk.Tk):
             return
         
     def Apply_deep_learning_model(self):
+        do_message_flag = False
         if self.model:
             if self.img_index != None:
                 fname = self.project_data["images"][self.img_index]
@@ -2982,6 +3000,7 @@ class ProjectViewerApp(tk.Tk):
                 classs = classs[sorted_indices].astype(int)   
                 if len(classs) > 0:
                     if self.project_data["rectangles"][self.project_data["images"][self.img_index]] != []:
+                        do_message_flag = True
                         response = messagebox.askyesno(
                             title="اطلاعات موجود",
                             message=f"آیا لیست اشیاء موجود برای این تصویر نگه داشته شوند؟",
@@ -2991,11 +3010,6 @@ class ProjectViewerApp(tk.Tk):
                             self.project_data["rectangles"][self.project_data["images"][self.img_index]] = []
                             self.project_data["IsLocks"][self.project_data["images"][self.img_index]] = []
                             self.project_data["Labels"][self.project_data["images"][self.img_index]] = []
-
-                            # self.rect_index = None
-                            # self.draw_rectamgles()
-                            # self.populate_rectangle_list()  # Populate the rectangle list
-                            # self.update_edit_panel_and_image_crop()
 
                     for i in range(len(sorted_indices)):
                         x1 = prediction_coords[i][0] - prediction_coords[i][2] / 2
@@ -3010,24 +3024,23 @@ class ProjectViewerApp(tk.Tk):
                     self.rect_index = 0
                     self.crop_cords = list((0, 0, 1, 1))
                     self.zoom_factor = 1
-                    self.display_image()  # Your method to display the image number self.img_index
+                    self.refresh_image()  # Your method to display the image number self.img_index
                     self.draw_rectamgles()
                     self.populate_rectangle_list()  # Populate the rectangle list
                     self.update_edit_panel_and_image_crop()
                     self.label_entry.focus_set()                 # Set keyboard focus to the labeling box for better UX                
                     self.label_entry.icursor(tk.END)  # Move cursor to end of text
-                
-                
-                messagebox.showinfo("Info", f" مدل هوش مصنوعی با آدرس \n{self.project_data["path_to_AI"]}\n روی تصویر \n {fname}\n اجرا شد و نتیجه به لیست اشیا اضافه شد")
+                else:
+                    messagebox.showinfo("Nothing", "Nothing is found in this image.")
+                    return
+                if do_message_flag:
+                    messagebox.showinfo("Info", f" مدل هوش مصنوعی با آدرس \n{self.project_data["path_to_AI"]}\n روی تصویر \n {fname}\n اجرا شد و نتیجه به لیست اشیا اضافه شد")
             else:
                 messagebox.showinfo("No image", "No image is selected,\nnot successful.")
                 return  # No image is selected
         else:
             messagebox.showinfo("No AI model", "No AI model is available,\nnot successful.")
             return  # No AI model is available
-
-
-
 
 def main():
     app = ProjectViewerApp()
