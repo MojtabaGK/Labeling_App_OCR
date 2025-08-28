@@ -1,7 +1,7 @@
 # Labeling_App_OCR
 An App in python for labeling and managing annotation of small objects, optimized for OCR purposes.
 
-Good fpr:
+Good for:
 - Small object annotation,
 - Textual image annotation,
 - Character detection,
