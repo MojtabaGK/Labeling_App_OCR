@@ -803,13 +803,13 @@ class ProjectViewerApp(tk.Tk):
 
                     # Write images list with index
                     for idx, img in enumerate(self.project_data["images"], start=1):
-                        f.write(f"[{idx:02d}] {img}\n")
+                        f.write(f"[{idx:03d}] {img}\n")
                     
                     f.write("\nRectangles per image:\n")
                     
                     # Write rectangles for each image
                     for idx, img in enumerate(self.project_data["images"], start=1):
-                        f.write(f"[{idx:02d}] {img}\n")
+                        f.write(f"[{idx:03d}] {img}\n")
                         rects = self.project_data["rectangles"][img]
                         Locks = self.project_data["IsLocks"][img]
                         Labels = self.project_data["Labels"][img]
@@ -950,6 +950,7 @@ class ProjectViewerApp(tk.Tk):
             "IsLocks": {},            # List of Lock boolian values for each Rectangle
             "Labels": {}              # List of Label name values for each Rectangle
         }
+        self.model = None
         self.image_tk = None  # Keep reference to avoid GC
         self.start_x = None
         self.start_y = None
@@ -1105,7 +1106,7 @@ class ProjectViewerApp(tk.Tk):
 
         MoveUp_button = ttk.Button(frame2, text="↑", padding=0, width=5, command=self.move_rectangle_up)
         MoveUp_button.pack(side=tk.LEFT, padx=0)
-        Auto_sort = ttk.Button(frame2, text="Auto Sort", padding=0, width=10, command=self.Auto_sort_rectangles)
+        Auto_sort = ttk.Button(frame2, text="⇊ Sort ⇇", padding=0, width=10, command=self.Auto_sort_rectangles)
         Auto_sort.pack(side=tk.LEFT, expand=True, padx=0)
         MoveDown_button = ttk.Button(frame2, text="↓", padding=0, width=5, command=self.move_rectangle_down)
         MoveDown_button.pack(side=tk.RIGHT, padx=0)
@@ -1994,7 +1995,56 @@ class ProjectViewerApp(tk.Tk):
                 self.label_entry.icursor(tk.END)  # Move cursor to end of text
 
     def Auto_sort_rectangles(self):
-        messagebox.showinfo('Under construction', 'کد این قسمت رو بعدا می‌نویسم\n\n44124244567\nمستطیل‌های تکراری هم باید مشخص بشن و در صورت لزوم پاک بشن')
+        # Identify the clicked image item index
+        if self.img_index == None:
+            messagebox.showerror("Error", "No image is selected.")
+            return
+        fname = self.project_data["images"][self.img_index]
+
+        response = messagebox.askyesnocancel(
+            title='Sort Direction?',
+            message='(YES)آیا مایلید به صورت عمودی از بالا به پایین مرتب شوند؟\n\n(NO)مایلم به صورت افقی مرتب شوند', 
+            icon='question'
+            )
+        if response == True:
+            direction  = 3 # Vertically
+        elif response == False:
+            direction  = 2 # Horisontally
+        else:
+            return
+
+        self.rectangles = self.project_data["rectangles"][fname]
+        coord_list = []
+        for rec in self.rectangles:
+            coord_list.append(list(rec)[direction])
+        if self.rectangles != []:
+            if response == True:
+                sorted_indices = np.argsort(coord_list) # Vertically
+            elif response == False:
+                sorted_indices = np.argsort(coord_list)[::-1] # Horisontally
+            
+            # تبدیل به لیست معمولی پایتون
+            sorted_indices_list = sorted_indices.tolist()
+
+            self.project_data["rectangles"][fname] = [self.project_data["rectangles"][fname][i] for i in sorted_indices_list]
+            self.project_data["IsLocks"][fname] = [self.project_data["IsLocks"][fname][i] for i in sorted_indices_list]
+            self.project_data["Labels"][fname] = [self.project_data["Labels"][fname][i] for i in sorted_indices_list]
+
+            self.rect_index = 0
+            self.draw_rectamgles()
+            self.populate_rectangle_list()  # Populate the rectangle list
+            self.update_edit_panel_and_image_crop()
+            self.label_entry.focus_set()                 # Set keyboard focus to the labeling box for better UX                
+            self.label_entry.icursor(tk.END)  # Move cursor to end of text
+
+            if response == True:
+                messagebox.showinfo('Success', 'List is successfully sorted vertically.')  # Vertically
+            elif response == False:
+                messagebox.showinfo('Success', 'List is successfully sorted horisontally.') # Horisontally
+
+        else:
+            self.rect_index = None
+            messagebox.showerror('Error', 'List is empty.')
 
     def on_rectangle_right_click(self, event):
         # Identify the clicked image item index
