@@ -41,6 +41,7 @@ class ProjectViewerApp(tk.Tk):
         self.crop_cords = [0, 0 , 1, 1] #Crop coordinations used for zoom
         self.label_to_number = {}
         self.last_zoom_time = 0
+        self.char_sequense = ""
 
         self.project_data = {
             "name": "",               # Project name (str)
@@ -93,6 +94,8 @@ class ProjectViewerApp(tk.Tk):
         file_menu.add_command(label="Add New Image to the Project", command=self.Add_New_Image_to_Project)
         file_menu.add_command(label="Save Project As", command=self.save_project)
         Edit_menu = tk.Menu(menu_bar, tearoff=0)
+        Edit_menu.add_command(label="Find Persian character sequense", command=self.Find_Persian_character_sequense)
+        Edit_menu.add_separator()  # اضافه کردن خط جداکننده
         Edit_menu.add_command(label="Lock All", command=self.Lock_All)
         Edit_menu.add_command(label="unLock All", command=self.unLock_All)
         Edit_menu.add_separator()  # اضافه کردن خط جداکننده
@@ -971,6 +974,8 @@ class ProjectViewerApp(tk.Tk):
         self.crop_cords = [0, 0 , 1, 1] #Crop coordinations used for zoom
         self.label_to_number = {}
         self.canvas.delete("all")
+        self.char_sequense = ""
+
 
     def _setup_widgets(self):
         main_frame = ttk.Frame(self, padding=10, style='TFrame', width=1000, height=800)
@@ -2355,6 +2360,8 @@ class ProjectViewerApp(tk.Tk):
                     self.Rec_Label = self.Labels[current_point[0]]  # Copy for editing
                     self.populate_rectangle_list()
                     if current_point[1] != start_point[1]:
+                        self.crop_cords = list((0, 0, 1, 1))
+                        self.zoom_factor = 1
                         self.display_image() # Your method to display the image number self.img_index
                     self.draw_rectamgles()
                     # self.update_edit_panel_and_image_crop()
@@ -2392,6 +2399,8 @@ class ProjectViewerApp(tk.Tk):
                     self.Rec_Label = self.Labels[current_point[0]]  # Copy for editing
                     self.populate_rectangle_list()
                     if current_point[1] != start_point[1]:
+                        self.crop_cords = list((0, 0, 1, 1))
+                        self.zoom_factor = 1
                         self.display_image() # Your method to display the image number self.img_index
                     self.draw_rectamgles()
                     # self.update_edit_panel_and_image_crop()
@@ -2461,6 +2470,70 @@ class ProjectViewerApp(tk.Tk):
             # Refresh rectangle list and redraw canvas rectangles
             self.populate_rectangle_list()
             self.enable_frame()
+
+    def Find_Persian_character_sequense(self):
+        while True:
+
+            char_sequense = simpledialog.askstring("Find String", "Write the character sequense\nyou are looking for (In Persian):", initialvalue= self.char_sequense)
+
+            if char_sequense == None:
+                return
+            else:
+                self.char_sequense = char_sequense
+                
+            Label_sequense = []
+            for chr in self.char_sequense:
+                if chr == 'ي':
+                    chr = 'ی'
+                if chr in self.Str_to_name:
+                    Label_sequense.append(self.Str_to_name[chr])
+                else:
+                    messagebox.showerror('Error', f"This character is not in our Persian character list:\n\"{chr}\"")
+                    continue
+
+            if self.rect_index != None:
+                start_point = list((self.rect_index, self.img_index))
+                current_point = list((self.rect_index + 1, self.img_index))
+                self.Labels = self.project_data["Labels"][self.project_data["images"][current_point[1]]]
+                check = True
+                while check:
+                    if current_point[0] >= len(self.Labels) - len(Label_sequense) + 1:
+                        current_point[0] = 0
+                        current_point[1] += 1
+                    if current_point[1] >= len(self.project_data["images"]):
+                        current_point[1] = 0
+                    self.rectangles = self.project_data["rectangles"][self.project_data["images"][current_point[1]]]
+                    self.IsLocks = self.project_data["IsLocks"][self.project_data["images"][current_point[1]]]
+                    self.Labels = self.project_data["Labels"][self.project_data["images"][current_point[1]]]
+                    if self.Labels == []:
+                        current_point[0] = 0
+                        current_point[1] += 1
+                        continue
+                    if  self.Labels[current_point[0]] == Label_sequense[0]:
+                        found_sequense = []
+                        for idx in range(len(Label_sequense)):
+                            found_sequense.append(self.project_data["Labels"][self.project_data["images"][current_point[1]]][current_point[0] + idx])
+                        if Label_sequense == found_sequense:
+                            self.img_index = current_point[1]
+                            self.rect_index = current_point[0]
+                            self.rec_islock = self.IsLocks[current_point[0]]
+                            self.coords = self.rectangles[current_point[0]]
+                            self.Rec_Label = self.Labels[current_point[0]]  # Copy for editing
+                            self.populate_rectangle_list()
+                            if current_point[1] != start_point[1]:
+                                self.crop_cords = list((0, 0, 1, 1))
+                                self.zoom_factor = 1
+                                self.display_image() # Your method to display the image number self.img_index
+                            self.draw_rectamgles()
+                            # self.update_edit_panel_and_image_crop()
+                            self.update_rectangle_preview()
+                            self.label_entry.focus_set()                 # Set keyboard focus to the labeling box for better UX                
+                            self.label_entry.icursor(tk.END)  # Move cursor to end of text
+                            check = False
+                    if current_point == start_point:
+                        check = False                
+                    current_point[0] += 1
+
 
     def Lock_All(self):
         for fname in self.project_data["images"]:
