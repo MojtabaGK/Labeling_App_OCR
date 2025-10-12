@@ -111,8 +111,12 @@ class ProjectViewerApp(tk.Tk):
         Export_menu.add_command(label="Split Current Image by BBoxes", command=self.Split_Current_image_by_BBoxes)
         Export_menu.add_command(label="Export Current Image to YAML format", command=self.Export_Image_to_YAML)
         Export_menu.add_command(label="Split Current Image by BBoxes and label", command=self.Split_Current_image_by_Label)
+        Export_menu.add_separator()  # اضافه کردن خط جداکننده
+        Export_menu.add_command(label="Split Project by Current image", command=self.Split_Project_by_Current_image)
         Import_menu = tk.Menu(menu_bar, tearoff=0)
         Import_menu.add_command(label="Import YOLO Database", command=self.Import_YOLO_dataset)
+        Import_menu.add_separator()  # اضافه کردن خط جداکننده
+        Import_menu.add_command(label="Merge with another Project", command=self.Merge_Project)
         Labels_menu = tk.Menu(menu_bar, tearoff=0)
         Labels_menu.add_command(label="Import Label Names List", command=self.Import_Label_Names_List)
         Labels_menu.add_command(label="Merge Label Names List", command=self.Merge_Label_Names_List)
@@ -341,6 +345,8 @@ class ProjectViewerApp(tk.Tk):
                 self.coords = list(self.rectangles[self.rect_index])  # Copy for editing
                 self.rec_islock = self.IsLocks[self.rect_index]  # Copy for editing
                 self.Rec_Label = self.Labels[self.rect_index]  # Copy for editing
+            project_name = self.project_data["name"]
+            self.title(f"Project Viewer: {project_name}")
 
             self.populate_rectangle_list()
             
@@ -371,7 +377,7 @@ class ProjectViewerApp(tk.Tk):
             project_name = simpledialog.askstring("Project Name", "Enter new project name:")
             if not project_name:
                 return  # User cancelled project name input
-            full_project_path = os.path.join(project_folder, project_name)
+            full_project_path = os.path.join(project_folder, project_name).replace("\\",  "/")
             try:
                 os.makedirs(full_project_path, exist_ok=False)
                 project_folder = full_project_path
@@ -404,8 +410,7 @@ class ProjectViewerApp(tk.Tk):
                     if os.path.isfile(os.path.join(jpg_folder, f)) and f.lower().endswith(".jpg")]
         # مسیر پوشه مقصد (project_folder/project_name/images)
         project_folder = project_folder.replace("\\",  "/")
-        project_image_folder = os.path.join(project_folder, "images")
-        project_image_folder = project_image_folder.replace("\\",  "/")
+        project_image_folder = os.path.join(project_folder, "images").replace("\\",  "/")
 
         # اگر پوشه مقصد وجود نداشت، آن را ایجاد کنید
         os.makedirs(project_image_folder, exist_ok=True)
@@ -415,8 +420,8 @@ class ProjectViewerApp(tk.Tk):
         else:
             # کپی تمام فایل‌های JPG به پوشه مقصد
             for image_file in image_files:
-                src_path = os.path.join(jpg_folder, image_file)
-                dst_path = os.path.join(project_image_folder, image_file)
+                src_path = os.path.join(jpg_folder, image_file).replace("\\",  "/")
+                dst_path = os.path.join(project_image_folder, image_file).replace("\\",  "/")
 
                 if os.path.exists(dst_path):
                     response = messagebox.askyesnocancel(
@@ -439,7 +444,7 @@ class ProjectViewerApp(tk.Tk):
                         if new_name:
                             if not new_name.lower().endswith('.jpg'):
                                 new_name += '.jpg'
-                            new_dst_path = os.path.join(project_image_folder, new_name)
+                            new_dst_path = os.path.join(project_image_folder, new_name).replace("\\",  "/")
                             shutil.copy2(src_path, new_dst_path)
                             messagebox.showinfo("ذخیره موفق", f"فایل با نام جدید '{new_name}' ذخیره شد.")
                 else:
@@ -455,7 +460,7 @@ class ProjectViewerApp(tk.Tk):
         self.project_data["path_to_AI"] = ""
         self.Load_deep_learning_model()
 
-        project_txt_path = os.path.join(project_folder, self.project_data["name"] + '_project.txt')
+        project_txt_path = os.path.join(project_folder, self.project_data["name"] + '_project.txt').replace("\\",  "/")
         try:
             with open(project_txt_path, "w", encoding="utf-8") as f:
                 f.write(f"Project: {project_name}\n\n")
@@ -481,6 +486,9 @@ class ProjectViewerApp(tk.Tk):
             self.project_data["rectangles"] = {img_path: [] for img_path in self.project_data["images"]}
             self.project_data["IsLocks"] = {img_path: [] for img_path in self.project_data["images"]}
             self.project_data["Labels"] = {img_path: [] for img_path in self.project_data["images"]}
+
+            project_name = self.project_data["name"]
+            self.title(f"Project Viewer: {project_name}")
 
             if image_files:
                 self.populate_image_list(image_files)
@@ -529,7 +537,7 @@ class ProjectViewerApp(tk.Tk):
             fname = os.path.basename(image_file)
 
             # ساخت مسیر فایل متن متناظر
-            txt_path = os.path.join(jpg_folder, os.path.splitext(fname)[0] + '.txt')
+            txt_path = os.path.join(jpg_folder, os.path.splitext(fname)[0] + '.txt').replace("\\",  "/")
             # بررسی وجود فایل متن
             responce_import_BBox_file = None
             resp = None
@@ -553,8 +561,8 @@ class ProjectViewerApp(tk.Tk):
 
             else:
             # کپی تمام فایل‌های JPG به پوشه مقصد
-                src_path = os.path.join(jpg_folder, fname)
-                dst_path = os.path.join(self.project_data["image_folder"], fname)
+                src_path = os.path.join(jpg_folder, fname).replace("\\",  "/")
+                dst_path = os.path.join(self.project_data["image_folder"], fname).replace("\\",  "/")
 
                 if os.path.exists(dst_path):
                     response = messagebox.askyesnocancel(
@@ -582,7 +590,7 @@ class ProjectViewerApp(tk.Tk):
                         i = 1
                         new_dst_path = dst_path
                         while os.path.exists(new_dst_path):
-                            new_dst_path = os.path.join(self.project_data["image_folder"], f"{name}_{i}{ext}")
+                            new_dst_path = os.path.join(self.project_data["image_folder"], f"{name}_{i}{ext}").replace("\\",  "/")
                             i += 1
 
                         new_fname = f"{name}_{i-1}{ext}"      # ساخت نام جدید
@@ -594,7 +602,7 @@ class ProjectViewerApp(tk.Tk):
                         if new_name:
                             if not new_name.lower().endswith('.jpg'):
                                 new_name += '.jpg'
-                            new_dst_path = os.path.join(self.project_data["image_folder"], new_name)
+                            new_dst_path = os.path.join(self.project_data["image_folder"], new_name).replace("\\",  "/")
                             shutil.copy2(src_path, new_dst_path)
                             messagebox.showinfo("ذخیره موفق", f"فایل با نام جدید '{new_name}' ذخیره شد.")
                             self.project_data["rectangles"][new_name] = [] 
@@ -711,7 +719,7 @@ class ProjectViewerApp(tk.Tk):
                 )
                 if not response:
                     try:
-                        os.remove(os.path.join(self.project_data["image_folder"], fname))
+                        os.remove(os.path.join(self.project_data["image_folder"], fname)).replace("\\",  "/")
                     except Exception as e:
                         messagebox.showerror(title="Image Delete Error", message=f"Couldn't delet the image from the project images folder:\n{e}")
 
@@ -838,10 +846,10 @@ class ProjectViewerApp(tk.Tk):
                 
                 # move images
                 # اگر فولدر مقصد وجود دارد، محتوا را جایگزین کنید
-                if os.path.exists(os.path.join(folder_path, 'images')):
+                if os.path.exists(os.path.join(folder_path, 'images').replace("\\",  "/")):
                     # کپی با جایگزینی فایل‌های تکراری
                     source_folder = self.project_data['image_folder']
-                    destination_folder = os.path.join(folder_path, 'images')
+                    destination_folder = os.path.join(folder_path, 'images').replace("\\",  "/")
 
                     # تبدیل مسیرها به فرم استاندارد و مقایسه
                     source_abs = os.path.abspath(source_folder)
@@ -856,7 +864,7 @@ class ProjectViewerApp(tk.Tk):
                         )
                 else:
                     # اگر فولدر مقصد وجود ندارد، ایجادش کن
-                    shutil.copytree(self.project_data['image_folder'], os.path.join(folder_path, 'images'), copy_function=shutil.copy2)
+                    shutil.copytree(self.project_data['image_folder'], os.path.join(folder_path, 'images').replace("\\",  "/"), copy_function=shutil.copy2)
                 # move AI file
                 if self.project_data['path_to_AI'] != "":
                     try:
@@ -877,7 +885,7 @@ class ProjectViewerApp(tk.Tk):
 
         # file path to Backup the project
         if default_file_path:
-            project_txt_path = os.path.join(default_file_path, self.project_data["name"] + '_project_Auto_Save.txt')
+            project_txt_path = os.path.join(default_file_path, self.project_data["name"] + '_project_Auto_Save.txt').replace("\\",  "/")
         else:
             messagebox.showwarning('Warning', 'could not backup the project', icon='warning')
 
@@ -1434,7 +1442,8 @@ class ProjectViewerApp(tk.Tk):
             return  # User cancelled folder selection
 
         for fname in self.project_data["images"]:
-            image_full_path = os.path.join(self.project_data["image_folder"], fname)
+            image_full_path = os.path.join(self.project_data["image_folder"], fname).replace("\\",  "/")
+
             filename, extension = os.path.splitext(os.path.basename(image_full_path))
             try:
                 img = Image.open(image_full_path)
@@ -1462,7 +1471,7 @@ class ProjectViewerApp(tk.Tk):
                 cropped_img = img.crop((left, top, right, bottom))
                 new_filename = f"{filename}_{(rec+1):03d}{extension}"
                 
-                new_path = os.path.join(destination, new_filename)
+                new_path = os.path.join(destination, new_filename).replace("\\",  "/")
                 cropped_img.save(new_path, quality=95)  # تغییر این خط
 
         messagebox.Message("عملیات با موفقیت انجام شد!")
@@ -1485,7 +1494,7 @@ class ProjectViewerApp(tk.Tk):
             return  # User cancelled folder selection
 
         for fname in self.project_data["images"]:
-            image_full_path = os.path.join(self.project_data["image_folder"], fname)
+            image_full_path = os.path.join(self.project_data["image_folder"], fname).replace("\\",  "/")
             filename, extension = os.path.splitext(os.path.basename(image_full_path))
             try:
                 img = Image.open(image_full_path)
@@ -1515,7 +1524,7 @@ class ProjectViewerApp(tk.Tk):
                     cropped_img = img.crop((left, top, right, bottom))
                     new_filename = f"{filename}_{(rec+1):03d}{extension}"
                     
-                    new_path = os.path.join(destination, new_filename)
+                    new_path = os.path.join(destination, new_filename).replace("\\",  "/")
                     cropped_img.save(new_path, quality=95)  # تغییر این خط
 
         messagebox.Message("عملیات با موفقیت انجام شد!")
@@ -1532,7 +1541,7 @@ class ProjectViewerApp(tk.Tk):
             if not destination:
                 return  # User cancelled folder selection
             fname = self.project_data["images"][self.img_index]
-            image_full_path = os.path.join(self.project_data["image_folder"], fname)
+            image_full_path = os.path.join(self.project_data["image_folder"], fname).replace("\\",  "/")
             filename, extension = os.path.splitext(os.path.basename(image_full_path))
             try:
                 img = Image.open(image_full_path)
@@ -1560,7 +1569,7 @@ class ProjectViewerApp(tk.Tk):
                 cropped_img = img.crop((left, top, right, bottom))
                 new_filename = f"{filename}_{(rec+1):03d}{extension}"
                 
-                new_path = os.path.join(destination, new_filename)
+                new_path = os.path.join(destination, new_filename).replace("\\",  "/")
                 cropped_img.save(new_path, quality=95)  # تغییر این خط
 
         messagebox.Message("عملیات با موفقیت انجام شد!")
@@ -1582,7 +1591,7 @@ class ProjectViewerApp(tk.Tk):
             if not destination:
                 return  # User cancelled folder selection
             fname = self.project_data["images"][self.img_index]
-            image_full_path = os.path.join(self.project_data["image_folder"], fname)
+            image_full_path = os.path.join(self.project_data["image_folder"], fname).replace("\\",  "/")
             filename, extension = os.path.splitext(os.path.basename(image_full_path))
             try:
                 img = Image.open(image_full_path)
@@ -1612,7 +1621,7 @@ class ProjectViewerApp(tk.Tk):
                     cropped_img = img.crop((left, top, right, bottom))
                     new_filename = f"{filename}_{(rec+1):03d}{extension}"
                     
-                    new_path = os.path.join(destination, new_filename)
+                    new_path = os.path.join(destination, new_filename).replace("\\",  "/")
                     cropped_img.save(new_path, quality=95)  # تغییر این خط
 
         messagebox.Message("عملیات با موفقیت انجام شد!")
@@ -1621,6 +1630,73 @@ class ProjectViewerApp(tk.Tk):
             f"Project Splited successfully.\nThe folder is:\n{destination}\n\n Do you want to open the folder?")
         if proceed:
             os.startfile(destination)
+
+    def Split_Project_by_Current_image(self):
+        if self.img_index != None:
+            destination = filedialog.askdirectory(title="Select the Destination Folder to Split Current Image")
+            if not destination:
+                return  # User cancelled folder selection
+            fname = self.project_data["images"][self.img_index]
+            try:
+                project_txt_path = os.path.join(destination, f"{fname}_project.txt").replace("\\",  "/")
+                with open(project_txt_path, "w", encoding="utf-8") as f:
+                    # Write project name
+                    f.write(f"Project: {fname}\n\n")
+                    # Write project folder
+                    f.write(f"Project Folder: {destination}\n\n")
+                    # Write image folder
+                    f.write(f"Image Folder: {destination + '/images'}\n\n")
+                    # Write empty path to AI assitant model
+                    f.write(f"Path to AI: \n\n")
+
+                    # Write images list with index
+                    f.write(f"[{1:03d}] {fname}\n")
+                    
+                    f.write("\nRectangles per image:\n")
+                    
+                    # Write rectangles for each image
+                    f.write(f"[{1:03d}] {fname}\n")
+                    rects = self.project_data["rectangles"][fname]
+                    Locks = self.project_data["IsLocks"][fname]
+                    Labels = self.project_data["Labels"][fname]
+                    if rects:
+                        for rcs, (x1, y1, x2, y2) in enumerate(rects):
+                            f.write(f"\tRect: ({x1:.6f}, {y1:.6f}), ({x2:.6f}, {y2:.6f})\n")
+                            label = Labels[rcs]
+                            f.write(f"\t\tLock := ({Locks[rcs]})  \tClass := \"{label}\" \n")
+                        f.write("\n")
+                    else:
+                        f.write("\n")  # If no rectangles, just add a new line
+
+                    f.write("\nnames:\n")  # List of label names
+                    f.write("\n")  # End of file
+                
+                # move images
+                image_full_path = os.path.join(self.project_data["image_folder"], fname).replace("\\",  "/")
+                # اگر فولدر مقصد وجود ندارد، ایجادش کن
+                image_destination_path = os.path.join(destination, 'images').replace("\\", "/")
+                image_destination_path = os.path.abspath(image_destination_path)
+                os.makedirs(image_destination_path, exist_ok=True)
+                # تبدیل مسیرها به فرم استاندارد و مقایسه
+                source_abs = os.path.abspath(self.project_data['image_folder'])
+
+                if source_abs != image_destination_path:
+                    try:
+                        # مسیر مقصد کامل
+                        dest_file = os.path.join(image_destination_path, os.path.basename(image_full_path)).replace("\\",  "/")
+                        # بررسی وجود فایل در مقصد
+                        if not os.path.exists(dest_file):
+                            shutil.copy2(image_full_path, image_destination_path)
+                        else:
+                            messagebox.showinfo("Info", f"This file exsisted in destination!!\n      {fname}.")
+                        messagebox.showinfo("Success", f"New Project is exported successfully with image\n      {fname}.")
+                    except Exception as e:
+                        messagebox.showerror("Error", f"Could not copy image to destination:\n{e}\n image moved is: {fname}")
+                else:
+                    messagebox.showinfo("Info", f"Source and destination folders for images are the same\n      {source_abs}.")
+            except Exception as e:
+                messagebox.showerror("Error", f"Could not export project comletely for image\n      {fname}")
+
 
     def populate_image_list(self, image_files):
         """Populate the image listbox with image filenames."""
@@ -1714,7 +1790,8 @@ class ProjectViewerApp(tk.Tk):
             self.lb1.focus_set()                 # Set keyboard focus to the listbox for better UX                
 
             fname = self.project_data["images"][self.img_index]
-            self.image_full_path = os.path.join(self.project_data["image_folder"], fname)
+            self.image_full_path = os.path.join(self.project_data["image_folder"], fname).replace("\\",  "/")
+
             try:
                 img = Image.open(self.image_full_path)
                 self.crop_img = img # تصویر با رزولوشن کامل برای نمایش در پنل ویرایش مستطیل
@@ -1767,7 +1844,6 @@ class ProjectViewerApp(tk.Tk):
 
         if self.img_index != None:
             try:
-                # img = Image.open(self.image_full_path)
                 img = self.original_image # Store the original image for resizing later
                 # Get available display frame size
                 frame_width = self.left_frame.winfo_width()-25
@@ -2725,12 +2801,16 @@ class ProjectViewerApp(tk.Tk):
             self.crop_canvas.delete("all")
             self.crop_canvas.create_image(canvas_width // 2, canvas_height // 2, anchor=tk.CENTER, image=cropped_img_tk)
             self.crop_canvas.image = cropped_img_tk  # Keep a reference to prevent garbage collection
-            self.crop_canvas.create_text(canvas_width // 2 - 1, canvas_height // 2, text=self.Rec_Label, 
-                                 fill="white", font=("Times New Roman", 16, "bold"))
-            self.crop_canvas.create_text(canvas_width // 2 + 1, canvas_height // 2, text=self.Rec_Label, 
-                                 fill="black", font=("Times New Roman", 16, "bold"))
+            self.crop_canvas.create_text(canvas_width // 2 - 1, canvas_height // 2 - 1, text=self.Rec_Label, 
+                                 fill="white", font=("Times New Roman", 18, "bold"))
+            self.crop_canvas.create_text(canvas_width // 2 + 1, canvas_height // 2 - 1, text=self.Rec_Label, 
+                                 fill="white", font=("Times New Roman", 18, "bold"))
+            self.crop_canvas.create_text(canvas_width // 2 - 1, canvas_height // 2 + 1, text=self.Rec_Label, 
+                                 fill="white", font=("Times New Roman", 18, "bold"))
+            self.crop_canvas.create_text(canvas_width // 2 + 1, canvas_height // 2 + 1, text=self.Rec_Label, 
+                                 fill="white", font=("Times New Roman", 18, "bold"))
             self.crop_canvas.create_text(canvas_width // 2, canvas_height // 2, text=self.Rec_Label, 
-                                 fill="blue", font=("Times New Roman", 16, "bold"))
+                                 fill="blue", font=("Times New Roman", 18, "bold"))
 
             if self.rec_islock:
                 self.disable_frame()
@@ -2760,7 +2840,7 @@ class ProjectViewerApp(tk.Tk):
             rectangles = self.project_data["rectangles"][image]
             if rectangles != []:
                 yolo_dataset = []
-                image_full_path = os.path.join(self.project_data["image_folder"], image)
+                image_full_path = os.path.join(self.project_data["image_folder"], image).replace("\\",  "/")
                 filename, extension = os.path.splitext(os.path.basename(image_full_path))
                 try:
                     img = Image.open(image_full_path)
@@ -2791,12 +2871,12 @@ class ProjectViewerApp(tk.Tk):
 
                 if yolo_dataset != []: # ذخیره محتوای هر فایل تصویری در یک فایل متنی
                     # Copy the image and generate .txt file           
-                    new_path = os.path.join(destination, image)
+                    new_path = os.path.join(destination, image).replace("\\",  "/")
                     img.save(new_path, quality=95)  
 
                     # ایجاد نام فایل متنی با پسوند .txt
                     txt_filename = os.path.splitext(filename)[0] + '.txt'
-                    txt_path = os.path.join(destination, txt_filename)
+                    txt_path = os.path.join(destination, txt_filename).replace("\\",  "/")
                     with open(txt_path, 'w') as txt_file:
                         for line in yolo_dataset:
                             txt_file.write(line)
@@ -2804,7 +2884,7 @@ class ProjectViewerApp(tk.Tk):
             
 
         YAML_filename = 'List_of_Labels.yaml'
-        YAML_path = os.path.join(destination, YAML_filename)
+        YAML_path = os.path.join(destination, YAML_filename).replace("\\",  "/")
         # ذخیره لیست لیبل‌ها و شماره منتسب به هرکدام
         with open(YAML_path, 'w', encoding="utf-8") as txt_file:
             txt_file.write("train: ../images/train\n")
@@ -2839,7 +2919,7 @@ class ProjectViewerApp(tk.Tk):
             
             image = self.project_data["images"][self.img_index]
             yolo_dataset = []
-            image_full_path = os.path.join(self.project_data["image_folder"], image)
+            image_full_path = os.path.join(self.project_data["image_folder"], image).replace("\\",  "/")
             fname, extension = os.path.splitext(os.path.basename(image_full_path))
             try:
                 img = Image.open(image_full_path)
@@ -2870,12 +2950,12 @@ class ProjectViewerApp(tk.Tk):
                     # اضافه کردن اطلاعات به متن فایل یامل
                     yolo_dataset.append(str(f"{self.label_to_number[label]:02d} {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}"))
             # Copy the image and generate .txt file           
-            new_path = os.path.join(destination, image)
+            new_path = os.path.join(destination, image).replace("\\",  "/")
             img.save(new_path, quality=95)  
 
             # ایجاد نام فایل متنی با پسوند .txt
             txt_filename = os.path.splitext(fname)[0] + '.txt'
-            txt_path = os.path.join(destination, txt_filename)
+            txt_path = os.path.join(destination, txt_filename).replace("\\",  "/")
 
             # ذخیره محتوای هر فایل تصویری در یک فایل متنی
             with open(txt_path, 'w') as txt_file:
@@ -2884,7 +2964,7 @@ class ProjectViewerApp(tk.Tk):
                     txt_file.write('\n')
 
         YAML_filename = os.path.splitext(fname)[0] + '_List_of_Labels.yaml'
-        YAML_path = os.path.join(destination, YAML_filename)
+        YAML_path = os.path.join(destination, YAML_filename).replace("\\",  "/")
         # ذخیره لیست لیبل‌ها و شماره منتسب به هرکدام
         with open(YAML_path, 'w', encoding="utf-8") as txt_file:
             txt_file.write("train: ../images/train\n")
@@ -2995,11 +3075,11 @@ class ProjectViewerApp(tk.Tk):
             isLocks = []
             Labels = []
 
-            image_full_path = os.path.join(sourcepath, image)
+            image_full_path = os.path.join(sourcepath, image).replace("\\",  "/")
             filename, extension = os.path.splitext(os.path.basename(image_full_path))
             # خواندن  فایل متنی با نام تصویر اگر وجود داشت .txt
             txt_filename = os.path.splitext(filename)[0] + '.txt'
-            txt_path = os.path.join(sourcepath, txt_filename)
+            txt_path = os.path.join(sourcepath, txt_filename).replace("\\",  "/")
 
             try:
                 with open(txt_path, "r", encoding="utf-8") as f:
@@ -3046,6 +3126,226 @@ class ProjectViewerApp(tk.Tk):
         project_txt_path = self.save_project()
         self.load_project_from_file(project_txt_path)
 
+    def Merge_Project(self):
+        project_txt_path = filedialog.askopenfilename(
+            title="Select Project .txt file to import and Merge",
+            filetypes=[("Project Text Files", "*.txt"), ("All Files", "*.*")]
+        )
+        if project_txt_path:
+            try:
+                with open(project_txt_path, "r", encoding="utf-8") as f:
+                    lines = [line.rstrip('\n') for line in f if line.strip()]
+            except Exception as e:
+                messagebox.showerror("Error", f"Could not read project file:\n{e}")
+                return
+            
+            if len(lines) < 4:
+                messagebox.showerror("Error", "Project file format is incorrect or incomplete.")
+                return
+
+        project_data = {
+            "name": "",               # Project name (str)
+            "project_folder": "",     # Project folder path (str)
+            "image_folder": "",       # Folder where images are located (str)
+            "images": [],             # List of image full paths (list of str)
+            "rectangles": {},         # Dict of {image_path: [ (x1, y1, x2, y2), ... ] }
+            "IsLocks": {},             # List of Lock boolian values for each Rectangle
+            "Labels": {}           # List of Label name values for each Rectangle
+        }
+
+        # Parse header info
+        if not lines[0].startswith("Project:"):
+            messagebox.showerror("Error", "Project name not found in project file.")
+            return
+
+        project_data["name"] = lines[0][len("Project:"):].strip()
+
+        if not lines[1].startswith("Project Folder:"):
+            messagebox.showerror("Error", "Project folder path not found in project file.")
+            return
+        project_data["project_folder"] = lines[1][len("Project Folder:"):].strip()
+        check_folder = os.path.exists(project_data["project_folder"])
+        if not check_folder:
+            project_data["project_folder"] = os.path.abspath(os.path.dirname(project_txt_path))
+            messagebox.showinfo("Caution", f"Project folder didn't exist.\nWe suppose the current folder and continue.\n\n{project_data['project_folder']}")
+            
+        if not lines[2].startswith("Image Folder:"):
+            messagebox.showerror("Error", "Image folder path not found in project file.")
+            return
+        project_data["image_folder"] = lines[2][len("Image Folder:"):].strip()
+        check_folder = os.path.exists(project_data["image_folder"])
+        if not check_folder:
+            project_data["image_folder"] = os.path.abspath(os.path.dirname(project_txt_path)) + '\\images'
+            messagebox.showinfo("Caution", f"Image folder didn't exist.\nWe suppose the default folder \"images\" and continue.\n\n{project_data['image_folder']}")
+
+        # Parse images list - starting at line 4 until an empty line or "Rectangles per image:"
+        i = 3
+        image_files = []
+        while i < len(lines) and lines[i].strip() and not lines[i].startswith("Rectangles per image:"):
+            line = lines[i]
+            # Expected format: [N] filename
+            if line.startswith('['):
+                close_bracket_idx = line.find(']')
+                if close_bracket_idx != -1:
+                    fname = line[close_bracket_idx+1:].strip()
+                    image_files.append(fname)
+            i += 1
+        project_data["images"] = image_files
+
+        # Initialize empty rectangles list for each image
+        project_data["rectangles"] = {img_path: [] for img_path in project_data["images"]}
+        project_data["IsLocks"] = {img_path: [] for img_path in project_data["images"]}
+        project_data["Labels"] = {img_path: [] for img_path in project_data["images"]}
+
+        # Skip empty lines and "Rectangles per image:" header
+        while i < len(lines) and (not lines[i].strip() or lines[i].startswith("Rectangles per image:")):
+            i += 1
+
+        # Parse rectangles per image
+        while i < len(lines) and (not lines[i].startswith("names:")):
+            line = lines[i].strip()
+            if line.startswith('['):  # image line
+                close_bracket_idx = line.find(']')
+                if close_bracket_idx == -1:
+                    i += 1
+                    continue
+                img_name = line[close_bracket_idx+1:].strip()
+                # Find matching image path:
+                img_path = None
+                for p in project_data["images"]:
+                    if os.path.basename(p) == img_name:
+                        img_path = p
+                        break
+                i += 1
+                # Read rectangles for this image (until next image or end)
+                rects = []
+                isLocks = []
+                recLabels = []
+                while i < len(lines) and (not lines[i].startswith('[')) and (not lines[i].startswith("names:")):
+                    rect_line = lines[i].strip()
+                    if rect_line.lower() != "no rectangles":
+                        # Expected format: Rect: (x1, y1), (x2, y2)
+                        if rect_line.startswith("Rect"):
+                            coords_start = rect_line.find('(')
+                            coords_end = rect_line.find(')')
+                            coords_start2 = rect_line.find('(', coords_end)
+                            coords_end2 = rect_line.find(')', coords_start2)
+                            if coords_start != -1 and coords_end != -1 and coords_start2 != -1 and coords_end2 != -1:
+                                try:
+                                    x1, y1 = map(float, rect_line[coords_start+1:coords_end].split(','))
+                                    x2, y2 = map(float, rect_line[coords_start2+1:coords_end2].split(','))
+                                    rects.append((x1, y1, x2, y2))
+                                except Exception:
+                                    pass  # skip malformed
+                            i += 1
+                            if i < len(lines):
+                                prop_line = lines[i].strip()
+                                if prop_line.startswith('Lock'):
+                                    # استخراج وضعیت قفل
+                                    lock_status = lines[i].split(':=')[1].strip()  # جدا کردن قسمت بعد از ':='
+                                    lock_value = lock_status.split('(')[1].split(')')[0].strip()  # استخراج مقدار داخل پرانتز
+                                    # استخراج متن داخل گیومه
+                                    class_text = lines[i].split('Class :=')[1].strip()  # جدا کردن قسمت بعد از 'Class :='
+                                    class_value = class_text.split('"')[1]  # استخراج متن داخل گیومه
+                                    isLocks.append(lock_value.lower() == 'true')
+                                    recLabels.append(class_value)
+                                else:
+                                    messagebox.showerror("Error", "File not compatible, Every Rectangle needs a property line after it like Lock:= () Class:=\"\"")
+                                    return
+                                
+                    i += 1
+
+
+                if img_path:
+                    project_data["rectangles"][img_path] = rects
+                    project_data["IsLocks"][img_path] = isLocks
+                    project_data["Labels"][img_path] = recLabels
+            else:
+                i += 1
+
+        # اطلاعات دو پروژه با هم مخلوط شوند
+        for fname in project_data["images"]:
+            # تصاویر هم اسم بررسی شوند. اگر تصویر هم اسم وجود داشت از کاربر نظر خواهی شود
+            if fname in self.project_data["images"]:
+                response = messagebox.askyesno(
+                    title='Image file exists!',
+                    message=f"File {fname} exists. Do You want to replace the BBox contents?\n\nSource Image file will not be replaced", 
+                    icon='question'
+                    )
+                if response == True:
+                    self.project_data["rectangles"][fname] = project_data["rectangles"][fname]
+                    self.project_data["IsLocks"][fname] = project_data["IsLocks"][fname]
+                    self.project_data["Labels"][fname] = project_data["Labels"][fname]
+                else:
+                    continue
+            else:
+                self.project_data["images"].append(fname)
+                self.project_data["rectangles"][fname] = project_data["rectangles"][fname]
+                self.project_data["IsLocks"][fname] = project_data["IsLocks"][fname]
+                self.project_data["Labels"][fname] = project_data["Labels"][fname]
+
+                # Copy image files to the main project folder
+                image_full_path = os.path.join(project_data["image_folder"], fname).replace("\\",  "/")
+                # اگر فولدر مقصد وجود ندارد، ایجادش کن
+                image_destination_path = self.project_data["image_folder"].replace("\\", "/")
+                image_destination_path = os.path.abspath(image_destination_path)
+                os.makedirs(image_destination_path, exist_ok=True)
+                # تبدیل مسیرها به فرم استاندارد و مقایسه
+                source_abs = os.path.abspath(project_data['image_folder'])
+
+                if source_abs != image_destination_path:
+                    try:
+                        # مسیر مقصد کامل
+                        dest_file = os.path.join(image_destination_path, os.path.basename(image_full_path)).replace("\\",  "/")
+                        # بررسی وجود فایل در مقصد
+                        if not os.path.exists(dest_file):
+                            shutil.copy2(image_full_path, image_destination_path)
+                        else:
+                            messagebox.showinfo("Info", f"This file exsisted in destination!!\n      {fname}.")
+                    except Exception as e:
+                        messagebox.showerror("Error", f"Could not copy image to destination:\n{e}\n image moved is: {fname}")
+                else:
+                    messagebox.showinfo("Info", f"Source and destination folders for images are the same\n      {source_abs}.")
+
+        # Retrieve the list of rectangles for the first image
+        image_files = self.project_data["images"]
+        if image_files:
+            self.populate_image_list(image_files)
+            self.img_index = 0
+            self.rectangles = self.project_data["rectangles"][self.project_data["images"][self.img_index]]
+            self.IsLocks = self.project_data["IsLocks"][self.project_data["images"][self.img_index]]
+            self.Labels = self.project_data["Labels"][self.project_data["images"][self.img_index]]
+            if self.rectangles == []:
+                self.rect_index = None
+                self.label_var.set("")
+                self.coords = None
+                self.rec_islock = None
+                self.Rec_Label = None
+                self.crop_canvas.delete("all")
+            else:
+                self.rect_index = 0
+                self.coords = list(self.rectangles[self.rect_index])  # Copy for editing
+                self.rec_islock = self.IsLocks[self.rect_index]  # Copy for editing
+                self.Rec_Label = self.Labels[self.rect_index]  # Copy for editing
+
+            self.populate_rectangle_list()
+            
+            # activate first image
+            self.lb1.selection_clear(0, tk.END)    # Clear any previous selection
+            self.lb1.selection_set(self.img_index)              # Select the first item (index 0)
+            self.lb1.activate(self.img_index)                  # Set the active item to the first one
+            self.lb1.see(self.img_index)                      # Scroll to make sure the first item is visible
+            self.lb1.focus_set()                 # Set keyboard focus to the listbox for better UX                
+            self.display_image() # Your method to display the image number self.img_index
+            self.draw_rectamgles()
+            self.update_edit_panel_and_image_crop()
+            self.label_entry.icursor(tk.END)  # Move cursor to end of text
+
+        else:
+            messagebox.showerror("Error", "No image is available in the project you selected.")
+            return
+        
+        messagebox.showinfo("Success", "New Project successfully Merged to the current Project")
 
     def Import_Label_Names_List(self):
         # دیکشنری برای نگاشت label به عدد
@@ -3224,8 +3524,7 @@ class ProjectViewerApp(tk.Tk):
                     )
                     if response:
                         try:
-                            new_dst_path = os.path.join(self.project_data["project_folder"], os.path.basename(AI_file))
-                            new_dst_path = new_dst_path.replace("\\",  "/")
+                            new_dst_path = os.path.join(self.project_data["project_folder"], os.path.basename(AI_file)).replace("\\",  "/")
                             shutil.copy2(self.project_data["path_to_AI"], new_dst_path)
                             self.project_data["path_to_AI"] = new_dst_path
                             messagebox.showinfo("Info", f"ّهوش مصنوعی به فولدر پروژه منتقل شد با نام\n{os.path.basename(AI_file)}")
@@ -3251,16 +3550,17 @@ class ProjectViewerApp(tk.Tk):
         if self.model:
             if self.img_index != None:
                 fname = self.project_data["images"][self.img_index]
-                image_path = os.path.join(self.project_data["image_folder"], fname)
+                image_path = os.path.join(self.project_data["image_folder"], fname).replace("\\",  "/")
 
                 results = self.model.predict(image_path)
                 prediction_coords = results[0].boxes.xywhn.cpu().numpy()
                 classs = results[0].boxes.cls.cpu().numpy()
                 names = results[0].names
                 result_file_name = fname[:-4] + '.txt'
-                result_file_path = os.path.join(self.project_data["image_folder"], result_file_name)
+                result_file_path = os.path.join(self.project_data["image_folder"], result_file_name).replace("\\",  "/")
                 os.remove(result_file_path) if os.path.exists(result_file_path) else None
-                results[0].save_txt(result_file_path, False)
+                # Save results if needed
+                # results[0].save_txt(result_file_path, False)
 
                 # مرتب‌سازی بر اساس مختصات x مرکز
                 sorted_indices = np.argsort(prediction_coords[:, 0])[::-1]
@@ -3315,15 +3615,16 @@ class ProjectViewerApp(tk.Tk):
             for idx, fname in enumerate(self.project_data["images"]):
                 if self.project_data["rectangles"][fname] == []:
                     try:
-                        image_path = os.path.join(self.project_data["image_folder"], fname)
+                        image_path = os.path.join(self.project_data["image_folder"], fname).replace("\\",  "/")
                         results = self.model.predict(image_path)
                         prediction_coords = results[0].boxes.xywhn.cpu().numpy()
                         classs = results[0].boxes.cls.cpu().numpy()
                         names = results[0].names
                         result_file_name = fname[:-4] + '.txt'
-                        result_file_path = os.path.join(self.project_data["image_folder"], result_file_name)
+                        result_file_path = os.path.join(self.project_data["image_folder"], result_file_name).replace("\\",  "/")
                         os.remove(result_file_path) if os.path.exists(result_file_path) else None
-                        results[0].save_txt(result_file_path, False)
+                        # Save results if needed
+                        # results[0].save_txt(result_file_path, False)
 
                         # مرتب‌سازی بر اساس مختصات x مرکز
                         sorted_indices = np.argsort(prediction_coords[:, 0])[::-1]
