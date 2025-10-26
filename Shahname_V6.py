@@ -1232,8 +1232,11 @@ class ProjectViewerApp(tk.Tk):
         self.label_entry.pack(side=tk.LEFT, padx=2)
         self.label_entry.bind("<KeyRelease>", self.update_label_text)
         self.label_entry.bind("<Down>", self.on_key_down)
+        self.label_entry.bind("<Control-Down>", self.on_key_down)
         self.label_entry.bind("<Up>", self.on_key_down)
+        self.label_entry.bind("<Control-Up>", self.on_key_down)
         self.label_entry.bind("<Return>", self.on_key_down)
+        
 
 
 
@@ -1365,11 +1368,17 @@ class ProjectViewerApp(tk.Tk):
     def on_key_down(self, event):
         """مدیریت فشردن کلیدها"""
         if event.keysym == "Down":  # اگر دکمه پایین فشار داده شد
-            self.go_next()           
+            if event.state & 0x4:  # بررسی اینکه کلید Ctrl هم فشرده شده
+                self.move_rectangle_down()  # تابع جدید برای Ctrl + پایین
+            else:
+                self.go_next()           
         elif event.keysym == "Up":  # اگر دکمه بالا فشار داده شد
-            self.go_back()        
+            if event.state & 0x4:  # بررسی اینکه کلید Ctrl هم فشرده شده
+                self.move_rectangle_up()  # تابع جدید برای Ctrl + بالا
+            else:
+                self.go_back()        
         elif event.keysym == "Return":  # اگر اینتر فشار داده شد
-            self.Lock_and_go_next()     
+            self.Lock_and_go_next()
 
     # Event handlers for drawing rectangles
     def on_button_press(self, event):
