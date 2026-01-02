@@ -20,10 +20,10 @@ Options:
 - .... 
 <img width="1202" height="752" alt="image" src="https://github.com/user-attachments/assets/0d75bbd6-2825-4bab-83f3-677b3c96bb00" />
 
-
+***
 ## User Guide:
 ***
-### "New Project" Feature
+### "New Project"
 
 #### Access Path:
   - File → New Project
@@ -46,10 +46,35 @@ Options:
   + Another file dialog opens asking you to select the folder containing your JPG images.
   + Navigate to your image folder and click "Select Folder".
   + To cancel, close the dialog or click "Cancel".
+  + Only JPG images from the selected source folder will be available in your project (You can modify the source code).
   + The project is now ready with your image data imported.
 
-- **Important Notes:**
-  + You can cancel the process at any step by closing the dialogs.
-  + Only JPG images from the selected source folder will be available in your project.
 ***
 ---
+### "Open Project"
+
+#### Access Path:
+  + File → Open Project
+
+#### Description:
+  + Opens an existing project from a saved project file (.txt).
+
+#### Step-by-Step Process:
+- **1. Select Project file:**
+  + Select the project's .txt file when prompted.
+  + The system loads all project settings and paths automatically.
+  + **What gets loaded from the .txt file?:**
+  + Project name and folder
+  + Image folder location
+  + AI model path (if included and valid)
+  + List of images in the project (By default availabele in "images" folder besides the .txt project file)
+  + List of annotations for each image
+  + Label names (if available)
+
+- **2. Load the AI assistant model if you want:**
+  + You'll be asked whether to load the AI assistant model if one is specified in the project file.
+  + To cancel loading, close the dialog or click "Cancel".
+ 
+    
+- **Important Notes:**
+  + If you see an error about file format, check that the .txt project file contains all required sections.
