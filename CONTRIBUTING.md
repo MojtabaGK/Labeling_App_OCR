@@ -1,6 +1,3 @@
-با توجه به رپازیتوری شما که یک ابزار حاشیه‌نویسی (Annotation Tool) است، متن ساده‌تر و مختصرتری برای CONTRIBUTING.md می‌نویسم:
-
----
 
 # Contributing to Safa Annotation Tool
 
@@ -13,7 +10,7 @@ First off, thank you for considering contributing to Safa Annotation Tool! 🎉
 If you use Safa Annotation Tool in your research, project, or publication, please cite it as:
 
 ```
-Mojtaba GK. (2024). Safa Annotation Tool: A Simple Image Annotation Tool. 
+MojtabaGK. (2024). Safa Annotation Tool: Aد Image Annotation Tool Optimized for OCR Purposes. 
 GitHub. https://github.com/MojtabaGK/Safa_Annotation_Tool
 ```
 
@@ -56,34 +53,6 @@ Help translate the tool's interface or documentation to other languages.
 # Clone the repository
 git clone https://github.com/MojtabaGK/Safa_Annotation_Tool.git
 cd Safa_Annotation_Tool
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the application
-python main.py
-```
-
----
-
-## Pull Request Process
-
-1. **Fork** the repository
-2. **Create a branch** for your changes
-3. **Make your changes** and test them
-4. **Commit** with a clear message
-5. **Push** to your fork
-6. **Open a Pull Request** with description of changes
-
-**Commit Message Format:**
-```
-type: short description
-
-- feat: new feature
-- fix: bug fix
-- docs: documentation
-- refactor: code improvements
-- style: formatting
 ```
 
 ---
