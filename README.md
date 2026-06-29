@@ -1,4 +1,4 @@
-![Downloads](https://img.shields.io/github/downloads/MojtabaGK/Labeling_App_OCR/total.svg)
+![Downloads](https://img.shields.io/github/downloads/MojtabaGK/Safa_Annotation_Tool/total.svg)
 
 
 # Safa Annotation Tool (SafaAT)
