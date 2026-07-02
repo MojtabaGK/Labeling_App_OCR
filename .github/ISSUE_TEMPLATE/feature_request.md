@@ -16,7 +16,7 @@ Edited function or script you think will do what you want.
 
 **Platform**
 SafaAT version: [1.0.2]
-[Linux, Windows, ...]
+OS: [Windows, Linux, Mac, ...]
 
 
 **Additional context**
