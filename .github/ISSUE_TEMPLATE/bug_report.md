@@ -7,19 +7,26 @@ assignees: ''
 
 ---
 
-**Description**
+**Description:**
+
 A clear and concise description of what the bug is.
 
-**Error message you see**
+
+**Error message you see:**
 
 
-**Screenshots**
+
+**Screenshots:**
+
 If applicable, add screenshots to help explain your problem.
 
+
 **Platform**
+
  - OS: [e.g. iOS]
  - Version [e.g. 1.0.2]
 
 
 **Additional context**
+
 Add any other context about the problem here.
