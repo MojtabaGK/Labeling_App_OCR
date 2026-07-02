@@ -7,14 +7,17 @@ assignees: ''
 
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+**Please describe your idea**
+A clear and concise description of what you are suggesting.
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+**Your solution**
+Edited function or script you think will do what you want.
+
+**Platform**
+SafaAT version: [1.0.2]
+[Linux, Windows, ...]
+
 
 **Additional context**
 Add any other context or screenshots about the feature request here.
